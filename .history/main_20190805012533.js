@@ -114,6 +114,9 @@ document.addEventListener('DOMContentLoaded', function(){
      console.log('/', arguments)
   })
   .add('/sessions$', function(){
+
+    console.log('this._rule', this._rule);
+
     console.log('/sessions', arguments)
   })
   .add('/battle/id:(\\d+)$', function(){

@@ -29,11 +29,9 @@ function $$(s, parent = document) {
 //   },
 // };
 
-
-
-const RouteRule = {
+const RouteParser = {
   pattern(origin){
-    let r = {origin, paramsMap: {}, params: {}};
+    let r = {origin, paramsMap: {}};
     let pattern = [];
     let i = 1;
 
@@ -46,20 +44,43 @@ const RouteRule = {
         r.paramsMap[tmp[0]] = i++;
       }
     });
-
+    
     r.pattern = pattern.join('/');
     return r;
   },
-  match(pattern){
+
+  params(origin){
     let url = location.hash.slice(1) || '/';
-    let matches = url.match(new RegExp(pattern, "i"));
-    return matches;
+    let query = {origin, /*url,*/ params: {}};
+    let pattern = [], pMap = [];
+    let i = 1;
+
+    origin.split('/').map(s => {
+      if (!/:/.test(s)) {
+        pattern.push(s);
+      } else {
+        let tmp = s.split(':');
+        query.params[tmp[0]] = tmp[1];
+        pattern.push(tmp[1]);
+        pMap[i] = tmp[0];
+      }
+    });
+    
+    query.pattern = pattern.join('/');
+
+    let matches = url.match((new RegExp(query.pattern, "ig")));
+
+
+    console.log('matches: ', matches);
+    console.log('map: ', Object.keys(pMap));
+    console.log('query: ', query);
+    return query;
   },
+
 };
 
 const Router = {
   _url: '/',
-  _rules: {},
   _routes: {},
   onBeforeApply(){
     // insert your code here
@@ -72,32 +93,54 @@ const Router = {
     window.addEventListener('load', this.onHashChange.bind(this));
     window.addEventListener('hashchange', this.onHashChange.bind(this));
   },
+  parseUrl(origin){
+    let url = location.hash.slice(1) || '/';
+    let query = {origin, /*url,*/ params: {}};
+    let pattern = [], pMap = [];
+    let i = 1;
+
+    origin.split('/').map(s => {
+      if (!/:/.test(s)) {
+        pattern.push(s);
+      } else {
+        let tmp = s.split(':');
+        query.params[tmp[0]] = tmp[1];
+        pattern.push(tmp[1]);
+        pMap[i] = tmp[0];
+      }
+    });
+    
+    query.pattern = pattern.join('/');
+
+    let matches = url.match((new RegExp(query.pattern, "ig")));
+
+
+    console.log('matches: ', matches);
+    console.log('map: ', Object.keys(pMap));
+    console.log('query: ', query);
+    return query;
+  },
   onHashChange(){
     this.url = location.hash.slice(1) || '/';
+    // this.parseUrl(this.url);
+
     if (!this.onBeforeApply(this.url)) return !1;
 
-    for (let pattern in this._routes) {
-      let matches = RouteRule.match(pattern);
-
-      if (matches ) {
-        let rule = this._rules[pattern];
-        for (let param in rule.paramsMap) {
-          let i = rule.paramsMap[param];
-          rule.params[param] = matches[i];
-        }
-        this._routes[pattern](rule);
-        this.onAfterApply();
-        return;
-      }
+    // /battle/id:(\d+)/tmp:(\d+)
+    let query = {
+      url: this.url,
+      params: {}
     }
 
-    this.error404();
+    this._routes[this.url] 
+      ? this._routes[this.url]()
+      : this.error404();
+
     this.onAfterApply()
   },
   add(pattern, route){
-    let rule = RouteRule.pattern(pattern);
-    this._rules[rule.pattern] = rule;
-    this._routes[rule.pattern] = route;
+    let query = this.parseUrl(pattern);
+    this._routes[query.pattern] = route.bind(this);
     return this;
   },
   error404(){
@@ -110,14 +153,14 @@ const Router = {
 
 document.addEventListener('DOMContentLoaded', function(){
   Router
-  .add('/$', function(){
-     console.log('/', arguments)
+  .add('/', function(){
+    // console.log('/', arguments)
   })
-  .add('/sessions$', function(){
-    console.log('/sessions', arguments)
+  .add('/sessions', function(){
+    // console.log('/sessions', arguments)
   })
-  .add('/battle/id:(\\d+)$', function(){
-     console.log('/battle/id:(\d+)', arguments)
+  .add('/battle/id:(\\\\d+)', function(){
+    // console.log('/battle/id:(\d+)', arguments)
   })
   .interact();
 });

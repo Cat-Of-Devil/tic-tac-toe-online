@@ -86,8 +86,6 @@ const Router = {
           rule.params[param] = matches[i];
         }
         this._routes[pattern](rule);
-        this.onAfterApply();
-        return;
       }
     }
 
@@ -97,6 +95,10 @@ const Router = {
   add(pattern, route){
     let rule = RouteRule.pattern(pattern);
     this._rules[rule.pattern] = rule;
+
+
+    route._rule = rule;
+
     this._routes[rule.pattern] = route;
     return this;
   },
@@ -110,13 +112,16 @@ const Router = {
 
 document.addEventListener('DOMContentLoaded', function(){
   Router
-  .add('/$', function(){
+  .add('/', function(){
      console.log('/', arguments)
   })
-  .add('/sessions$', function(){
+  .add('/sessions', function(){
+
+    console.log('this._rule', this._rule);
+
     console.log('/sessions', arguments)
   })
-  .add('/battle/id:(\\d+)$', function(){
+  .add('/battle/id:(\\d+)', function(){
      console.log('/battle/id:(\d+)', arguments)
   })
   .interact();

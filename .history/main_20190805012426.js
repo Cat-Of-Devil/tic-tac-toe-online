@@ -97,7 +97,14 @@ const Router = {
   add(pattern, route){
     let rule = RouteRule.pattern(pattern);
     this._rules[rule.pattern] = rule;
-    this._routes[rule.pattern] = route;
+
+
+    // route._rule = rule;
+
+    this._routes[rule.pattern] = function(){
+      this._rule = rule;
+      return route;
+    };
     return this;
   },
   error404(){
@@ -114,6 +121,9 @@ document.addEventListener('DOMContentLoaded', function(){
      console.log('/', arguments)
   })
   .add('/sessions$', function(){
+
+    console.log('this._rule', this._rule);
+
     console.log('/sessions', arguments)
   })
   .add('/battle/id:(\\d+)$', function(){

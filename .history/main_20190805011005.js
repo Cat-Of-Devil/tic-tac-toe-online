@@ -81,13 +81,16 @@ const Router = {
 
       if (matches ) {
         let rule = this._rules[pattern];
+        
         for (let param in rule.paramsMap) {
           let i = rule.paramsMap[param];
+          console.log('i: ', i);
+          console.log('param: ', param);
           rule.params[param] = matches[i];
+          console.log('matches[i]: ', matches[i]);
         }
+        console.log('rule: ', rule);
         this._routes[pattern](rule);
-        this.onAfterApply();
-        return;
       }
     }
 
@@ -97,7 +100,7 @@ const Router = {
   add(pattern, route){
     let rule = RouteRule.pattern(pattern);
     this._rules[rule.pattern] = rule;
-    this._routes[rule.pattern] = route;
+    this._routes[rule.pattern] = route.bind(this);
     return this;
   },
   error404(){
@@ -111,13 +114,13 @@ const Router = {
 document.addEventListener('DOMContentLoaded', function(){
   Router
   .add('/$', function(){
-     console.log('/', arguments)
+    //  console.log('/', arguments)
   })
-  .add('/sessions$', function(){
-    console.log('/sessions', arguments)
+  .add('/sessions', function(){
+    // console.log('/sessions', arguments)
   })
-  .add('/battle/id:(\\d+)$', function(){
-     console.log('/battle/id:(\d+)', arguments)
+  .add('/battle/id:(\\d+)', function(){
+    //  console.log('/battle/id:(\d+)', arguments)
   })
   .interact();
 });

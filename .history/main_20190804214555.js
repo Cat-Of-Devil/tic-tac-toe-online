@@ -7,59 +7,29 @@ function $$(s, parent = document) {
   return parent.querySelectorAll(s);
 }
 
-// const App = {
-//   init(){
-//     console.log('init!');
-//     this.cacheElements();
-//     this.bindEvents();
-//   },
-//   bindEvents(){
-//     window.addEventListener('load', this.onHashChange);
-//     window.addEventListener('hashchange', this.onHashChange);
-//   },
-//   cacheElements(){
-//     this.$templates = $$('.container');
-//   },
-//   onHashChange(){
-//     //let hash = location.hash.slice(1);
-//     console.log('hash: ', hash);
-//   },
-//   showScreen(name){
-
-//   },
-// };
-
-
-
-const RouteRule = {
-  pattern(origin){
-    let r = {origin, paramsMap: {}, params: {}};
-    let pattern = [];
-    let i = 1;
-
-    origin.split('/').map(s => {
-      if (!/:/.test(s)) {
-        pattern.push(s);
-      } else {
-        let tmp = s.split(':');
-        pattern.push(tmp[1]);
-        r.paramsMap[tmp[0]] = i++;
-      }
-    });
-
-    r.pattern = pattern.join('/');
-    return r;
+const App = {
+  init(){
+    console.log('init!');
+    this.cacheElements();
+    this.bindEvents();
   },
-  match(pattern){
-    let url = location.hash.slice(1) || '/';
-    let matches = url.match(new RegExp(pattern, "i"));
-    return matches;
+  bindEvents(){
+    window.addEventListener('load', this.onHashChange);
+    window.addEventListener('hashchange', this.onHashChange);
+  },
+  cacheElements(){
+    this.$templates = $$('.container');
+  },
+  onHashChange(){
+    //let hash = location.hash.slice(1);
+    console.log('hash: ', hash);
+  },
+  showScreen(name){
+
   },
 };
 
 const Router = {
-  _url: '/',
-  _rules: {},
   _routes: {},
   onBeforeApply(){
     // insert your code here
@@ -68,58 +38,22 @@ const Router = {
   onAfterApply(){
     // insert your code here
   },
-  bindEvents(){
-    window.addEventListener('load', this.onHashChange.bind(this));
-    window.addEventListener('hashchange', this.onHashChange.bind(this));
-  },
-  onHashChange(){
-    this.url = location.hash.slice(1) || '/';
-    if (!this.onBeforeApply(this.url)) return !1;
-
-    for (let pattern in this._routes) {
-      let matches = RouteRule.match(pattern);
-
-      if (matches ) {
-        let rule = this._rules[pattern];
-        for (let param in rule.paramsMap) {
-          let i = rule.paramsMap[param];
-          rule.params[param] = matches[i];
-        }
-        this._routes[pattern](rule);
-        this.onAfterApply();
-        return;
-      }
-    }
-
-    this.error404();
-    this.onAfterApply()
-  },
   add(pattern, route){
-    let rule = RouteRule.pattern(pattern);
-    this._rules[rule.pattern] = rule;
-    this._routes[rule.pattern] = route;
+    this._routes[pattern] = route;
     return this;
   },
-  error404(){
-    console.log('Error 404!', this.url);
+  apply(){
+    let url = location.hash.slice(1) || '/';
+    if (!this.onBeforeApply(url)) return !1;
+    this._routes[pattern]
   },
-  interact() {
-    this.bindEvents();
+  error404(){
+    
   }
 }; 
 
 document.addEventListener('DOMContentLoaded', function(){
-  Router
-  .add('/$', function(){
-     console.log('/', arguments)
-  })
-  .add('/sessions$', function(){
-    console.log('/sessions', arguments)
-  })
-  .add('/battle/id:(\\d+)$', function(){
-     console.log('/battle/id:(\d+)', arguments)
-  })
-  .interact();
+  App.init();
 });
 
 

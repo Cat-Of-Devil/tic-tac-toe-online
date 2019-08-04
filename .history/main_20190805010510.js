@@ -33,7 +33,7 @@ function $$(s, parent = document) {
 
 const RouteRule = {
   pattern(origin){
-    let r = {origin, paramsMap: {}, params: {}};
+    let r = {origin, paramsMap: {}};
     let pattern = [];
     let i = 1;
 
@@ -51,6 +51,7 @@ const RouteRule = {
     return r;
   },
   match(pattern){
+    console.log('pattern: ', pattern);
     let url = location.hash.slice(1) || '/';
     let matches = url.match(new RegExp(pattern, "i"));
     return matches;
@@ -85,9 +86,8 @@ const Router = {
           let i = rule.paramsMap[param];
           rule.params[param] = matches[i];
         }
+        console.log('rule: ', rule);
         this._routes[pattern](rule);
-        this.onAfterApply();
-        return;
       }
     }
 
@@ -97,7 +97,7 @@ const Router = {
   add(pattern, route){
     let rule = RouteRule.pattern(pattern);
     this._rules[rule.pattern] = rule;
-    this._routes[rule.pattern] = route;
+    this._routes[rule.pattern] = route.bind(this);
     return this;
   },
   error404(){
@@ -113,10 +113,10 @@ document.addEventListener('DOMContentLoaded', function(){
   .add('/$', function(){
      console.log('/', arguments)
   })
-  .add('/sessions$', function(){
-    console.log('/sessions', arguments)
+  .add('/sessions', function(){
+    // console.log('/sessions', arguments)
   })
-  .add('/battle/id:(\\d+)$', function(){
+  .add('/battle/id:(\\d+)', function(){
      console.log('/battle/id:(\d+)', arguments)
   })
   .interact();
