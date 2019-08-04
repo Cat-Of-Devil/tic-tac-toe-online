@@ -1,0 +1,27 @@
+{
+  "session": [
+    {
+      "id": 1,
+      "title": "Holly war!",
+      "playerA": "Вася",
+      "playerB": "SuperHero!",
+      "winner": null,
+      "startTime": 1564934152087,
+      "endTime": 1564772589468,
+      "toolA": "x",
+      "toolB": "0",
+      "step": 7,
+      "state": [
+        0,
+        1,
+        0,
+        null,
+        1,
+        1,
+        null,
+        1,
+        0
+      ]
+    }
+  ]
+}

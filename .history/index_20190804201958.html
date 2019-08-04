@@ -1,0 +1,33 @@
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Крестики-нолики</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container">
+  <h2>Wait..</h2>
+</div>
+
+<div class="container hidden js-sign-in">
+  <h2>Придумайте себе героическое имя</h2>
+  <input type="text" name="username" required>
+  <button>Сохранить</button>
+</div>
+
+<div class="container hidden js-session-list">
+  <h2>Выбирайте с кем играть или создавайте свою игру</h2>
+  <div class="js-session-wrap"></div>
+</div>
+
+<div class="container hidden js-battle">
+  <div class="title"><span></span></div>
+  <div class="move">Ход: <span>x</span></div>
+  <div class="cols-wrap js-game"></div>
+</div>
+
+<script src="main.js"></script>
+</body>
+</html>
