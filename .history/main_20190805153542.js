@@ -1,7 +1,16 @@
+
 (function () {
 
-  let containers = document.querySelectorAll('.container');
-  let container = document.querySelector('.js-game');
+  function $(s, parent = document) {
+    return parent.querySelector(s);
+  }
+
+  function $$(s, parent = document) {
+    return parent.querySelectorAll(s);
+  }
+
+  let containers = $$('.container');
+  let container = $('.js-game');
 
   let username = localStorage.getItem('username');
   let gameId = localStorage.getItem('gameId');
@@ -13,13 +22,17 @@
     location.hash = `battle/${gameId}`;
   }
 
-  window.onload = window.onhashchange = function(){
-    hash = location.hash.split('#')[1];
-    console.log('hashchange', hash);
-    showPage(hash);
+  window.addEventListener('load', onHashChange);
+  window.addEventListener('hashchange', onHashChange);
+
+  function onHashChange() {
+    let hash = location.hash.slice(1);
+    let screen = hash.replace(/(\/?([^\/]+)\/)/, "$2");
+    console.log('screen: ', screen);
+    showScreen(hash);
   }
 
-  function showPage(hash) {
+  function showScreen(hash) {
     let chunk = hash.split('/');
 
     containers.forEach(function(o, i){
@@ -31,27 +44,27 @@
     });
 
     if (chunk[0] == 'sign-in') {
-      let signIn = document.querySelector('.js-sign-in');
-      let usernameInp = signIn.querySelector('input[type=text]');
-      let usernameSave = signIn.querySelector('button');
+      let signIn = $('.js-sign-in');
+      let usernameInp = $('input[type=text]', signIn);
+      let usernameSave = $('button', signIn);
 
-      if (username) location.hash = 'session-list';
+      if (username) location.hash = 'sessions';
 
       usernameSave.addEventListener('click', function(){
         username = usernameInp.value;
         if (username) {
           localStorage.setItem('username', username);
-          location.hash = 'session-list';
+          location.hash = 'sessions';
         }
       });
     }
 
-    if (chunk[0] == 'session-list') {
+    if (chunk[0] == 'sessions') {
       
       fetch(`/session?winner=no`)
       .then(resp => resp.json())
       .then((items)=>{
-        let container = document.querySelector('.js-session-wrap');
+        let container = $('.js-session-wrap');
         container.innerHTML = '';
 
         items.forEach((el, i) => {
@@ -144,10 +157,10 @@
           let nextStep = (session.step % 2 == 0) ? session.toolA : session.toolB;
           let nextStepTitle = (session.step % 2 == 0) ? session.toolA_title : session.toolB_title;
       
-          let nextStepEl = document.querySelector('.js-battle .move span');
+          let nextStepEl = $('.js-battle .move span');
           nextStepEl.innerHTML = nextStepTitle;
       
-          let titleEl = document.querySelector('.js-battle .title');
+          let titleEl = $('.js-battle .title');
           titleEl.innerHTML = `${username}, Вы играете "${getYourToolTitle(session)}"`;
 
           let canIStep = (getYourTool(session) == nextStep);
@@ -167,7 +180,7 @@
       
       
         function checkWinner(session) {
-          let cols = container.querySelectorAll('.col');
+          let cols = $$('.col');
       
             if
             (cols[0].matches('.tic') && cols[1].matches('.tic') && cols[2].matches('.tic') ||

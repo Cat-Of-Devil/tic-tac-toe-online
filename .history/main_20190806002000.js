@@ -13,7 +13,6 @@
   let username = localStorage.getItem('username');
   let gameId = localStorage.getItem('gameId');
   let gameState = {};
-  let hash, screen;
   
   if (location.hash == '' || !username)
     location.hash = 'sign-in';
@@ -26,8 +25,8 @@
   window.addEventListener('hashchange', onHashChange);
 
   function onHashChange() {
-    hash = location.hash.slice(1);
-    screen = hash.replace(/(\/?([^\/]+)\/?.*)/, "$2");
+    let hash = location.hash.slice(1);
+    let screen = hash.replace(/(\/?([^\/]+)\/?.*)/, "$2");
     console.log('screen: ', screen);
 
     switch(screen) {
@@ -118,25 +117,19 @@
       });
     });
     
-    (function poll() {
-      fetch(`${location.origin}/session?winner=no`)
-        .then(resp => resp.json())
-        .then((items)=>{
-          wrapper.innerHTML = '';
-          items.forEach((el, i) => {
-            wrapper.insertAdjacentHTML('beforeend', [
-              '<div>',
-                '<a onclick="return confirm(\'Вы уверены что хотите начать игру?\')" href="#battle/'+el.id+'">#'+el.id+': '+el.title+'</a>',
-              '</a>',
-            ].join(''));
-          });
+    fetch(`${location.origin}/session?winner=no`)
+    .then(resp => resp.json())
+    .then((items)=>{
+      wrapper.innerHTML = '';
 
-          if (screen == 'sessions')
-            setTimeout(poll, 2000);
-        });
-    }());
-
-    
+      items.forEach((el, i) => {
+        wrapper.insertAdjacentHTML('beforeend', [
+          '<div>',
+            '<a onclick="return confirm(\'Вы уверены что хотите начать игру?\')" href="#battle/'+el.id+'">#'+el.id+': '+el.title+'</a>',
+          '</a>',
+        ].join(''));
+      })
+    });
   }
 
   function doBattle(){

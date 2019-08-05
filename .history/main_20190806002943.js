@@ -123,16 +123,14 @@
         .then(resp => resp.json())
         .then((items)=>{
           wrapper.innerHTML = '';
+
           items.forEach((el, i) => {
             wrapper.insertAdjacentHTML('beforeend', [
               '<div>',
                 '<a onclick="return confirm(\'Вы уверены что хотите начать игру?\')" href="#battle/'+el.id+'">#'+el.id+': '+el.title+'</a>',
               '</a>',
             ].join(''));
-          });
-
-          if (screen == 'sessions')
-            setTimeout(poll, 2000);
+          })
         });
     }());
 

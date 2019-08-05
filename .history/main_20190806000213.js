@@ -13,7 +13,6 @@
   let username = localStorage.getItem('username');
   let gameId = localStorage.getItem('gameId');
   let gameState = {};
-  let hash, screen;
   
   if (location.hash == '' || !username)
     location.hash = 'sign-in';
@@ -26,8 +25,8 @@
   window.addEventListener('hashchange', onHashChange);
 
   function onHashChange() {
-    hash = location.hash.slice(1);
-    screen = hash.replace(/(\/?([^\/]+)\/?.*)/, "$2");
+    let hash = location.hash.slice(1);
+    let screen = hash.replace(/(\/?([^\/]+)\/?.*)/, "$2");
     console.log('screen: ', screen);
 
     switch(screen) {
@@ -54,17 +53,13 @@
 
   function doSignIn(){
     let container = $('.js-sign-in');
-
-    if (username) {
-      location.hash = `sessions`;
-      return false;
-    }
+    let usernameInp = $('input[type=text]', container);
+    let saveBtn = $('button', container);
     
     showScreen(container);
-
-    $('form', container).addEventListener('submit', function(e){
-      e.preventDefault();
-      username = e.target.username.value;
+    
+    saveBtn.addEventListener('click', function(){
+      username = usernameInp.value;
       if (username) {
         localStorage.setItem('username', username);
         location.hash = 'sessions';
@@ -81,13 +76,14 @@
     $('form', container).addEventListener('submit', function(e){
       e.preventDefault();
 
-      fetch(`${location.origin}/session`, {
+      fetch(`/session`, {
         method: 'POST', 
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          "title": e.target.title.value,
+          "id": 1,
+          "title": "Holly war!",
           "playerA": username,
           "playerB": null,
           "winner": "no",
@@ -112,31 +108,22 @@
           ]
         })
       })
-      .then(resp => resp.json())
-      .then((session)=>{
-        location.hash = `battle/${session.id}`;
-      });
+      .then(resp => resp.json());
     });
     
-    (function poll() {
-      fetch(`${location.origin}/session?winner=no`)
-        .then(resp => resp.json())
-        .then((items)=>{
-          wrapper.innerHTML = '';
-          items.forEach((el, i) => {
-            wrapper.insertAdjacentHTML('beforeend', [
-              '<div>',
-                '<a onclick="return confirm(\'Вы уверены что хотите начать игру?\')" href="#battle/'+el.id+'">#'+el.id+': '+el.title+'</a>',
-              '</a>',
-            ].join(''));
-          });
+    fetch(`/session?winner=no`)
+    .then(resp => resp.json())
+    .then((items)=>{
+      wrapper.innerHTML = '';
 
-          if (screen == 'sessions')
-            setTimeout(poll, 2000);
-        });
-    }());
-
-    
+      items.forEach((el, i) => {
+        wrapper.insertAdjacentHTML('beforeend', [
+          '<div>',
+            '<a onclick="return confirm(\'Вы уверены что хотите начать игру?\')" href="#battle/'+el.id+'">#'+el.id+': '+el.title+'</a>',
+          '</a>',
+        ].join(''));
+      })
+    });
   }
 
   function doBattle(){
@@ -164,7 +151,7 @@
     });
     
     (function poll() {
-      fetch(`${location.origin}/session/${gameId}`)
+      fetch(`/session/${gameId}`)
         .then(resp => resp.json())
         .then(session=>{
           renderGame(session);
@@ -272,7 +259,7 @@
       gameState.step++;
       gameState.state[index] = yourTool(gameState);
 
-      return fetch(`${location.origin}/session/${gameId}`, {
+      return fetch(`/session/${gameId}`, {
         method: 'PUT', 
         headers: {
           'Content-Type': 'application/json',
@@ -293,7 +280,7 @@
         'Победили нолики!',
       ];
   
-      return fetch(`${location.origin}/session/${gameId}`, {
+      return fetch(`/session/${gameId}`, {
         method: 'PUT', 
         headers: {
           'Content-Type': 'application/json',
@@ -305,7 +292,7 @@
         alert(messages[winner]);
         gameId = null;
         localStorage.removeItem('gameId');
-        location.hash = 'sessions';
+        location.href = 'sessions';
       });
     }
   }

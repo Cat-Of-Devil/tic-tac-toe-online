@@ -13,7 +13,6 @@
   let username = localStorage.getItem('username');
   let gameId = localStorage.getItem('gameId');
   let gameState = {};
-  let hash, screen;
   
   if (location.hash == '' || !username)
     location.hash = 'sign-in';
@@ -26,8 +25,8 @@
   window.addEventListener('hashchange', onHashChange);
 
   function onHashChange() {
-    hash = location.hash.slice(1);
-    screen = hash.replace(/(\/?([^\/]+)\/?.*)/, "$2");
+    let hash = location.hash.slice(1);
+    let screen = hash.replace(/(\/?([^\/]+)\/?.*)/, "$2");
     console.log('screen: ', screen);
 
     switch(screen) {
@@ -54,17 +53,13 @@
 
   function doSignIn(){
     let container = $('.js-sign-in');
-
-    if (username) {
-      location.hash = `sessions`;
-      return false;
-    }
+    let usernameInp = $('input[type=text]', container);
+    let saveBtn = $('button', container);
     
     showScreen(container);
-
-    $('form', container).addEventListener('submit', function(e){
-      e.preventDefault();
-      username = e.target.username.value;
+    
+    saveBtn.addEventListener('click', function(){
+      username = usernameInp.value;
       if (username) {
         localStorage.setItem('username', username);
         location.hash = 'sessions';
@@ -77,70 +72,23 @@
     let wrapper = $('.js-session-list', container);
 
     showScreen(container);
+    
+    fetch(`/session?winner=no`)
+    .then(resp => resp.json())
+    .then((items)=>{
+      wrapper.innerHTML = '';
 
-    $('form', container).addEventListener('submit', function(e){
-      e.preventDefault();
-
-      fetch(`${location.origin}/session`, {
-        method: 'POST', 
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          "title": e.target.title.value,
-          "playerA": username,
-          "playerB": null,
-          "winner": "no",
-          "createdTime": (new Date()).getTime(),
-          "startTime": null,
-          "endTime": null,
-          "toolA": 1,
-          "toolB": 0,
-          "toolA_title": "X",
-          "toolB_title": "0",
-          "step": 0,
-          "state": [
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null
-          ]
-        })
+      items.forEach((el, i) => {
+        wrapper.insertAdjacentHTML('beforeend', [
+          '<div>',
+            '<a onclick="return confirm(\'Вы уверены что хотите начать игру?\')" href="#battle/'+el.id+'">#'+el.id+': '+el.title+'</a>',
+          '</a>',
+        ].join(''));
       })
-      .then(resp => resp.json())
-      .then((session)=>{
-        location.hash = `battle/${session.id}`;
-      });
     });
-    
-    (function poll() {
-      fetch(`${location.origin}/session?winner=no`)
-        .then(resp => resp.json())
-        .then((items)=>{
-          wrapper.innerHTML = '';
-          items.forEach((el, i) => {
-            wrapper.insertAdjacentHTML('beforeend', [
-              '<div>',
-                '<a onclick="return confirm(\'Вы уверены что хотите начать игру?\')" href="#battle/'+el.id+'">#'+el.id+': '+el.title+'</a>',
-              '</a>',
-            ].join(''));
-          });
-
-          if (screen == 'sessions')
-            setTimeout(poll, 2000);
-        });
-    }());
-
-    
   }
 
   function doBattle(){
-
     let container = $('.js-battle');
     let gameArea = $('.js-game', container);
     let hash = location.hash.slice(1);
@@ -152,7 +100,6 @@
       return false;
     }
 
-    showScreen(container);
     assignToGame(gameId);
 
     gameArea.addEventListener('click', function(e){
@@ -164,7 +111,7 @@
     });
     
     (function poll() {
-      fetch(`${location.origin}/session/${gameId}`)
+      fetch(`/session/${gameId}`)
         .then(resp => resp.json())
         .then(session=>{
           renderGame(session);
@@ -204,34 +151,35 @@
       });
     }
 
-    function yourTool(session) {
+    function getYourTool(session) {
       return (username == session.playerA) ? session.toolA : session.toolB;
     }
-    function yourToolTitle(session) {
+    function getYourToolTitle(session) {
       return (username == session.playerA) ? session.toolA_title : session.toolB_title;
     }
   
     function renderGame(session) {
       gameState = Object.assign({}, session);
-      gameArea.innerHTML = '';
+      container.innerHTML = '';
 
       let nextStep = (session.step % 2 == 0) ? session.toolA : session.toolB;
       let nextStepTitle = (session.step % 2 == 0) ? session.toolA_title : session.toolB_title;
   
-      let nextStepEl = $('.move span', container);
+      let nextStepEl = document.querySelector('.js-battle .move span');
+      console.log('nextStepEl: ', nextStepEl);
       nextStepEl.innerHTML = nextStepTitle;
   
-      let titleEl = $('.title', container);
-      titleEl.innerHTML = `${username}, Вы играете "${yourToolTitle(session)}"`;
+      let titleEl = $('.js-battle .title');
+      titleEl.innerHTML = `${username}, Вы играете "${getYourToolTitle(session)}"`;
 
-      let canIStep = (yourTool(session) == nextStep);
+      let canIStep = (getYourTool(session) == nextStep);
 
       session.state.forEach((el, i) => {
         let cssClass = (el!==null ? ((el === 1) ? 'tic' : 'tac') : '');
   
         cssClass += ((el !== null) || !canIStep) ? ' disabled' : '';
   
-        gameArea.insertAdjacentHTML('beforeend', [
+        container.insertAdjacentHTML('beforeend', [
           '<div data-index="'+i+'" data-value="'+el+'" class="col '+cssClass+'"></div>',
         ].join(''));
       });
@@ -245,34 +193,40 @@
   
         if
         (cols[0].matches('.tic') && cols[1].matches('.tic') && cols[2].matches('.tic') ||
-          cols[3].matches('.tic') && cols[4].matches('.tic') && cols[5].matches('.tic') ||
-          cols[6].matches('.tic') && cols[7].matches('.tic') && cols[8].matches('.tic') ||
-          cols[0].matches('.tic') && cols[3].matches('.tic') && cols[6].matches('.tic') ||
-          cols[1].matches('.tic') && cols[4].matches('.tic') && cols[7].matches('.tic') ||
-          cols[2].matches('.tic') && cols[5].matches('.tic') && cols[8].matches('.tic') ||
-          cols[0].matches('.tic') && cols[4].matches('.tic') && cols[8].matches('.tic') ||
-          cols[2].matches('.tic') && cols[4].matches('.tic') && cols[6].matches('.tic')) {
+            cols[3].matches('.tic') && cols[4].matches('.tic') && cols[5].matches('.tic') ||
+            cols[6].matches('.tic') && cols[7].matches('.tic') && cols[8].matches('.tic') ||
+            cols[0].matches('.tic') && cols[3].matches('.tic') && cols[6].matches('.tic') ||
+            cols[1].matches('.tic') && cols[4].matches('.tic') && cols[7].matches('.tic') ||
+            cols[2].matches('.tic') && cols[5].matches('.tic') && cols[8].matches('.tic') ||
+            cols[0].matches('.tic') && cols[4].matches('.tic') && cols[8].matches('.tic') ||
+            cols[2].matches('.tic') && cols[4].matches('.tic') && cols[6].matches('.tic')) {
+            // winnerText.innerHTML = 'Победили крестики!';
+            // winner.classList.add('active');
             endGame(session, 1);
         } else if
         (cols[0].matches('.tac') && cols[1].matches('.tac') && cols[2].matches('.tac') ||
-          cols[3].matches('.tac') && cols[4].matches('.tac') && cols[5].matches('.tac') ||
-          cols[6].matches('.tac') && cols[7].matches('.tac') && cols[8].matches('.tac') ||
-          cols[0].matches('.tac') && cols[3].matches('.tac') && cols[6].matches('.tac') ||
-          cols[1].matches('.tac') && cols[4].matches('.tac') && cols[7].matches('.tac') ||
-          cols[2].matches('.tac') && cols[5].matches('.tac') && cols[8].matches('.tac') ||
-          cols[0].matches('.tac') && cols[4].matches('.tac') && cols[8].matches('.tac') ||
-          cols[2].matches('.tac') && cols[4].matches('.tac') && cols[6].matches('.tac')) {
+            cols[3].matches('.tac') && cols[4].matches('.tac') && cols[5].matches('.tac') ||
+            cols[6].matches('.tac') && cols[7].matches('.tac') && cols[8].matches('.tac') ||
+            cols[0].matches('.tac') && cols[3].matches('.tac') && cols[6].matches('.tac') ||
+            cols[1].matches('.tac') && cols[4].matches('.tac') && cols[7].matches('.tac') ||
+            cols[2].matches('.tac') && cols[5].matches('.tac') && cols[8].matches('.tac') ||
+            cols[0].matches('.tac') && cols[4].matches('.tac') && cols[8].matches('.tac') ||
+            cols[2].matches('.tac') && cols[4].matches('.tac') && cols[6].matches('.tac')) {
+            // winnerText.innerHTML = 'Победили нолики!';
+            // winner.classList.add('active');
             endGame(session, 2)
         } else if (session.step == 9) {
+            // winnerText.innerHTML = 'Ничья!';
+            // winner.classList.add('active');
             endGame(session, 0)
         }
     }
 
     function makeAction(index, gameState) {
       gameState.step++;
-      gameState.state[index] = yourTool(gameState);
+      gameState.state[index] = getYourTool(gameState);
 
-      return fetch(`${location.origin}/session/${gameId}`, {
+      return fetch(`/session/${gameId}`, {
         method: 'PUT', 
         headers: {
           'Content-Type': 'application/json',
@@ -293,7 +247,7 @@
         'Победили нолики!',
       ];
   
-      return fetch(`${location.origin}/session/${gameId}`, {
+      return fetch(`/session/${gameId}`, {
         method: 'PUT', 
         headers: {
           'Content-Type': 'application/json',
@@ -305,7 +259,7 @@
         alert(messages[winner]);
         gameId = null;
         localStorage.removeItem('gameId');
-        location.hash = 'sessions';
+        location.href = '/';
       });
     }
   }
