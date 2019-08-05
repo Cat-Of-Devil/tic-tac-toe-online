@@ -1,0 +1,22 @@
+{
+  "name": "simple-chat",
+  "version": "1.0.0",
+  "description": "Simple demo chat based on JSON-server and long-polling",
+  "main": "server.js",
+  "dependencies": {
+    "json-server": "^0.14.0"
+  },
+  "devDependencies": {
+    
+  },
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [
+    "chat",
+    "heroku",
+    "json-server"
+  ],
+  "author": "Roman Masyahin",
+  "license": "ISC"
+}
